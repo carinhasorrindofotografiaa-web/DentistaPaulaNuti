@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Star, Check, X, Lock, Edit2, Save } from 'lucide-react';
+import { Star, Check, X, Lock, Edit2, Save, Trash2, RotateCcw, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -14,11 +14,14 @@ interface Testimonial {
   created_at: string;
 }
 
+type TabType = 'pending' | 'approved' | 'rejected';
+
 const VALID_PASSWORDS = ['paula2025', '2025paula', 'drapaulanuti'];
 
 export default function AdminTestimonials() {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [activeTab, setActiveTab] = useState<TabType>('pending');
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState<string | null>(null);
@@ -34,9 +37,9 @@ export default function AdminTestimonials() {
 
   useEffect(() => {
     if (authenticated) {
-      fetchPendingTestimonials();
+      fetchTestimonials(activeTab);
     }
-  }, [authenticated]);
+  }, [authenticated, activeTab]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,10 +54,12 @@ export default function AdminTestimonials() {
     }
   };
 
-  const fetchPendingTestimonials = async () => {
+  const fetchTestimonials = async (status: TabType) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('get-pending-testimonials');
+      const { data, error } = await supabase.functions.invoke('get-testimonials-by-status', {
+        body: { status }
+      });
 
       if (error) {
         console.error('Error fetching testimonials:', error);
@@ -71,7 +76,7 @@ export default function AdminTestimonials() {
     }
   };
 
-  const handleAction = async (id: string, action: 'approve' | 'reject') => {
+  const handleModerate = async (id: string, action: 'approve' | 'reject') => {
     setProcessing(id);
     try {
       const { error } = await supabase.functions.invoke('moderate-testimonial', {
@@ -90,6 +95,54 @@ export default function AdminTestimonials() {
     } catch (error: any) {
       console.error('Error:', error);
       toast.error('Erro ao processar depoimento');
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleChangeStatus = async (id: string, newStatus: 'approved' | 'rejected' | 'pending') => {
+    setProcessing(id);
+    try {
+      const { error } = await supabase.functions.invoke('change-testimonial-status', {
+        body: { id, status: newStatus }
+      });
+
+      if (error) throw error;
+
+      const messages = {
+        approved: 'Depoimento reativado e publicado!',
+        rejected: 'Depoimento removido da publicação',
+        pending: 'Depoimento movido para pendentes'
+      };
+
+      toast.success(messages[newStatus]);
+      setTestimonials(prev => prev.filter(t => t.id !== id));
+    } catch (error: any) {
+      console.error('Error:', error);
+      toast.error('Erro ao alterar status');
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir este depoimento permanentemente?')) {
+      return;
+    }
+
+    setProcessing(id);
+    try {
+      const { error } = await supabase.functions.invoke('delete-testimonial', {
+        body: { id }
+      });
+
+      if (error) throw error;
+
+      toast.success('Depoimento excluído permanentemente');
+      setTestimonials(prev => prev.filter(t => t.id !== id));
+    } catch (error: any) {
+      console.error('Error:', error);
+      toast.error('Erro ao excluir depoimento');
     } finally {
       setProcessing(null);
     }
@@ -190,22 +243,64 @@ export default function AdminTestimonials() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
-              Depoimentos Pendentes
+              Gerenciamento de Depoimentos
             </h1>
             <p className="text-muted-foreground">
-              Aprove, edite ou recuse depoimentos enviados por pacientes
+              Gerencie todos os depoimentos enviados por pacientes
             </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={handleLogout}
-          >
+          <Button variant="outline" onClick={handleLogout}>
             Sair
           </Button>
         </div>
 
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6 border-b border-border">
+          <button
+            onClick={() => setActiveTab('pending')}
+            className={`px-6 py-3 font-medium transition-colors relative ${
+              activeTab === 'pending'
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Pendentes
+            {activeTab === 'pending' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('approved')}
+            className={`px-6 py-3 font-medium transition-colors relative ${
+              activeTab === 'approved'
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Aprovados
+            {activeTab === 'approved' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('rejected')}
+            className={`px-6 py-3 font-medium transition-colors relative ${
+              activeTab === 'rejected'
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Recusados
+            {activeTab === 'rejected' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
+        </div>
+
+        {/* Content */}
         {loading ? (
           <div className="text-center py-12">
+            <RefreshCw className="w-8 h-8 text-primary animate-spin mx-auto mb-4" />
             <p className="text-muted-foreground">Carregando depoimentos...</p>
           </div>
         ) : testimonials.length === 0 ? (
@@ -214,16 +309,14 @@ export default function AdminTestimonials() {
               <Check className="w-8 h-8 text-primary" />
             </div>
             <p className="text-xl font-medium text-foreground mb-2">
-              Nenhum depoimento pendente
-            </p>
-            <p className="text-muted-foreground">
-              Todos os depoimentos foram processados
+              Nenhum depoimento {activeTab === 'pending' ? 'pendente' : activeTab === 'approved' ? 'aprovado' : 'recusado'}
             </p>
             <Button
               variant="outline"
-              onClick={fetchPendingTestimonials}
+              onClick={() => fetchTestimonials(activeTab)}
               className="mt-4"
             >
+              <RefreshCw className="w-4 h-4 mr-2" />
               Atualizar
             </Button>
           </div>
@@ -363,23 +456,76 @@ export default function AdminTestimonials() {
                           <Edit2 className="w-4 h-4 mr-2" />
                           Editar
                         </Button>
-                        <Button
-                          onClick={() => handleAction(testimonial.id, 'approve')}
-                          disabled={processing === testimonial.id}
-                          className="flex-1 lg:w-full bg-green-600 hover:bg-green-700"
-                        >
-                          <Check className="w-4 h-4 mr-2" />
-                          Aprovar
-                        </Button>
-                        <Button
-                          onClick={() => handleAction(testimonial.id, 'reject')}
-                          disabled={processing === testimonial.id}
-                          variant="destructive"
-                          className="flex-1 lg:w-full"
-                        >
-                          <X className="w-4 h-4 mr-2" />
-                          Recusar
-                        </Button>
+
+                        {/* Pending Actions */}
+                        {activeTab === 'pending' && (
+                          <>
+                            <Button
+                              onClick={() => handleModerate(testimonial.id, 'approve')}
+                              disabled={processing === testimonial.id}
+                              className="flex-1 lg:w-full bg-green-600 hover:bg-green-700"
+                            >
+                              <Check className="w-4 h-4 mr-2" />
+                              Aprovar
+                            </Button>
+                            <Button
+                              onClick={() => handleModerate(testimonial.id, 'reject')}
+                              disabled={processing === testimonial.id}
+                              variant="destructive"
+                              className="flex-1 lg:w-full"
+                            >
+                              <X className="w-4 h-4 mr-2" />
+                              Recusar
+                            </Button>
+                          </>
+                        )}
+
+                        {/* Approved Actions */}
+                        {activeTab === 'approved' && (
+                          <>
+                            <Button
+                              onClick={() => handleChangeStatus(testimonial.id, 'rejected')}
+                              disabled={processing === testimonial.id}
+                              variant="outline"
+                              className="flex-1 lg:w-full"
+                            >
+                              <X className="w-4 h-4 mr-2" />
+                              Despublicar
+                            </Button>
+                            <Button
+                              onClick={() => handleDelete(testimonial.id)}
+                              disabled={processing === testimonial.id}
+                              variant="destructive"
+                              className="flex-1 lg:w-full"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Excluir
+                            </Button>
+                          </>
+                        )}
+
+                        {/* Rejected Actions */}
+                        {activeTab === 'rejected' && (
+                          <>
+                            <Button
+                              onClick={() => handleChangeStatus(testimonial.id, 'approved')}
+                              disabled={processing === testimonial.id}
+                              className="flex-1 lg:w-full bg-green-600 hover:bg-green-700"
+                            >
+                              <RotateCcw className="w-4 h-4 mr-2" />
+                              Reativar
+                            </Button>
+                            <Button
+                              onClick={() => handleDelete(testimonial.id)}
+                              disabled={processing === testimonial.id}
+                              variant="destructive"
+                              className="flex-1 lg:w-full"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Excluir
+                            </Button>
+                          </>
+                        )}
                       </>
                     )}
                   </div>
