@@ -504,15 +504,6 @@ export default function AdminTestimonials() {
                             <Button
                               onClick={() => handleChangeStatus(testimonial.id, 'rejected')}
                               disabled={processing === testimonial.id}
-                              variant="outline"
-                              className="flex-1 lg:w-full"
-                            >
-                              <X className="w-4 h-4 mr-2" />
-                              Despublicar
-                            </Button>
-                            <Button
-                              onClick={() => handleDelete(testimonial.id)}
-                              disabled={processing === testimonial.id}
                               variant="destructive"
                               className="flex-1 lg:w-full"
                             >
