@@ -21,9 +21,22 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
+    const updateData: any = { status };
+    
+    if (status === 'approved') {
+      updateData.approved_at = new Date().toISOString();
+      updateData.rejected_at = null;
+    } else if (status === 'rejected') {
+      updateData.rejected_at = new Date().toISOString();
+      updateData.approved_at = null;
+    } else if (status === 'pending') {
+      updateData.approved_at = null;
+      updateData.rejected_at = null;
+    }
+
     const { error: updateError } = await supabase
       .from('testimonials')
-      .update({ status })
+      .update(updateData)
       .eq('id', id);
 
     if (updateError) {

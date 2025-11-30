@@ -32,9 +32,19 @@ Deno.serve(async (req) => {
     // Update testimonial status
     const newStatus = action === 'approve' ? 'approved' : 'rejected';
     
+    const updateData: any = { status: newStatus };
+    
+    if (action === 'approve') {
+      updateData.approved_at = new Date().toISOString();
+      updateData.rejected_at = null;
+    } else {
+      updateData.rejected_at = new Date().toISOString();
+      updateData.approved_at = null;
+    }
+    
     const { error: updateError } = await supabase
       .from('testimonials')
-      .update({ status: newStatus })
+      .update(updateData)
       .eq('id', id);
 
     if (updateError) {

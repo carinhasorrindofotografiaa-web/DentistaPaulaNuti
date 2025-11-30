@@ -12,6 +12,8 @@ interface Testimonial {
   comment: string;
   status: string;
   created_at: string;
+  approved_at?: string;
+  rejected_at?: string;
 }
 
 type TabType = 'pending' | 'approved' | 'rejected';
@@ -413,12 +415,28 @@ export default function AdminTestimonials() {
                               {testimonial.procedure}
                             </p>
                           </div>
-                          <div className="col-span-2">
+                          <div>
                             <span className="text-muted-foreground">Enviado em:</span>
                             <p className="font-medium text-foreground mt-1">
                               {new Date(testimonial.created_at).toLocaleString('pt-BR')}
                             </p>
                           </div>
+                          {testimonial.approved_at && (
+                            <div>
+                              <span className="text-muted-foreground">Aprovado em:</span>
+                              <p className="font-medium text-green-600 mt-1">
+                                {new Date(testimonial.approved_at).toLocaleString('pt-BR')}
+                              </p>
+                            </div>
+                          )}
+                          {testimonial.rejected_at && (
+                            <div>
+                              <span className="text-muted-foreground">Recusado em:</span>
+                              <p className="font-medium text-red-600 mt-1">
+                                {new Date(testimonial.rejected_at).toLocaleString('pt-BR')}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
