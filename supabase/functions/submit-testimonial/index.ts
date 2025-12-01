@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     }
 
     // Get the frontend URL for admin panel
-    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://dentistapaulanuti.onspace.app';
+    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://drapaulanuti.vercel.app';
     const adminPanelUrl = `${frontendUrl}/admin`;
 
     const stars = '⭐'.repeat(rating);
