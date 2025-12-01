@@ -21,9 +21,14 @@ export default function About() {
   return (
     <section id="sobre" className="section-padding bg-background">
       <div className="container-custom">
+        {/* Title */}
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-foreground mb-12">
+          Quem Sou
+        </h2>
+
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Image */}
-          <div className="relative order-1 lg:order-1">
+          <div className="relative">
             <div className="relative border-4 border-accent/20 overflow-hidden">
               <img
                 src="https://cdn-ai.onspace.ai/onspace/files/Vy745qcAYAgTsxfzEHdd4Z/soueu.jpg"
@@ -39,11 +44,8 @@ export default function About() {
           </div>
 
           {/* Content */}
-          <div className="space-y-8 order-2 lg:order-2">
+          <div className="space-y-8">
             <div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-foreground mb-6">
-                Quem Sou
-              </h2>
               <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
                 <p>
                   Sou a <strong className="text-foreground">Dra. Paula Nuti Pontes</strong>, dentista especializada em Odontologia Integrativa e Oncológica. Minha atuação vai além dos aspectos técnicos: busco compreender e acolher o paciente em sua totalidade, buscando melhorar a qualidade de vida de pacientes oncológicos e de pacientes que possuem disfunções orofaciais.
