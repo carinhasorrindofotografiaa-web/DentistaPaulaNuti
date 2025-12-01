@@ -23,7 +23,7 @@ export default function About() {
       <div className="container-custom">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Image */}
-          <div className="relative order-2 lg:order-1">
+          <div className="relative order-1 lg:order-1">
             <div className="relative border-4 border-accent/20 overflow-hidden">
               <img
                 src="https://cdn-ai.onspace.ai/onspace/files/Vy745qcAYAgTsxfzEHdd4Z/soueu.jpg"
@@ -39,7 +39,7 @@ export default function About() {
           </div>
 
           {/* Content */}
-          <div className="space-y-8 order-1 lg:order-2">
+          <div className="space-y-8 order-2 lg:order-2">
             <div>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-foreground mb-6">
                 Quem Sou
